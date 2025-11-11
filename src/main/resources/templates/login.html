@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <!-- ⭐️ Tailwind CSS 추가 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center">
+
+<div class="bg-white p-10 rounded-lg shadow-md w-full max-w-md text-center">
+    <h1 class="text-3xl font-bold text-blue-600 mb-2">🐙</h1>
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">노터치 크라켄</h1>
+
+    <p class="text-gray-600 mb-8">게임에 참여하려면 로그인이 필요합니다.</p>
+
+    <!--
+      ⭐️ Spring Security가 이 URL을 가로채서 구글 로그인 페이지로 보냅니다.
+      (SecurityConfig에서 .oauth2Login()이 활성화되어 있어야 함)
+    -->
+    <a href="/oauth2/authorization/google"
+       class="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <!-- Google 로고 SVG -->
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.45-4.792 3.45-2.843 0-5.136-2.313-5.136-5.136s2.293-5.136 5.136-5.136c1.616 0 2.996.591 4.066 1.534l2.64-2.64C18.046 2.637 15.479 1 11.956 1 6.469 1 2.023 5.474 2.023 10.98s4.446 9.98 9.933 9.98c5.485 0 9.933-4.446 9.933-9.98 0-.7-.058-1.383-.17-2.044z"/>
+        </svg>
+        Google로 로그인하기
+    </a>
+</div>
+
+</body>
+</html>

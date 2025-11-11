@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게임방</title>
+    <!-- ⭐️ Tailwind CSS 추가 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ⭐️ Thymeleaf 변수를 JS로 넘기기 -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const currentRoomCode = /*[[${roomCode}]]*/ '0000';
+        const currentUserId = /*[[${currentUserId}]]*/ 0;
+        const currentUsername = /*[[${currentUsername}]]*/ 'tempUser';
+        /*]]>*/
+    </script>
+    <style>
+        /* ⭐️ 기존 스타일을 Tailwind 클래스로 대체 (일부 커스텀 스타일만 남김) */
+        #participant-list li.my-turn {
+            background-color: #fef9c3; /* Tailwind 'bg-yellow-100' */
+            border-color: #facc15; /* Tailwind 'border-yellow-400' */
+            border-width: 2px;
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.25rem 0.5rem; /* p-1 px-2 */
+        }
+        #participant-list span.ready {
+            color: #16a34a; /* Tailwind 'text-green-600' */
+            font-weight: 700; /* Tailwind 'font-bold' */
+        }
+        #participant-list span.not-ready {
+            color: #6b7280; /* Tailwind 'text-gray-500' */
+        }
+
+        /* ⭐️ [FIX] .card 관련 @apply를 모두 일반 CSS로 수정 */
+        /* ⭐️ [FIX] 2. 카드 레이아웃 (가로 정렬) */
+        .cards {
+            display: flex;
+            flex-wrap: wrap; /* ⭐️ 카드가 많아지면 줄바꿈 */
+            gap: 5px; /* Tailwind 'gap-1' */
+            margin-top: 5px; /* Tailwind 'mt-1' */
+        }
+        .card {
+            width: 5rem; /* w-20 */
+            height: 7rem; /* h-28 */
+            border-width: 2px; /* border-2 */
+            border-color: #9ca3af; /* border-gray-400 */
+            border-radius: 0.375rem; /* rounded-md */
+            background-color: #d1d5db; /* bg-gray-300 */
+            cursor: pointer; /* cursor-pointer */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 700; /* font-bold */
+        }
+        .card.my-card {
+            background-color: #e5e7eb; /* bg-gray-200 */
+            cursor: not-allowed; /* cursor-not-allowed */
+        }
+        .card.revealed {
+            background-color: #ffffff; /* bg-white */
+            border-color: #000000; /* border-black */
+            cursor: not-allowed; /* cursor-not-allowed */
+        }
+
+        /* ⭐️ [추가] 4. 뒤집힌 카드 종류별 스타일 */
+        .card.revealed.type-treasure {
+            background-color: #fef9c3; /* yellow-100 */
+            border-color: #ca8a04; /* yellow-600 */
+            color: #ca8a04;
+        }
+        .card.revealed.type-kraken {
+            background-color: #f3e8ff; /* purple-100 */
+            border-color: #9333ea; /* purple-600 */
+            color: #9333ea;
+        }
+        .card.revealed.type-empty {
+            background-color: #f3f4f6; /* gray-100 */
+            border-color: #6b7280; /* gray-500 */
+            color: #6b7280;
+        }
+
+        /* ⭐️ [추가] 3/4. 역할 및 손패 텍스트 색상 */
+        .role-explorer { color: #2563eb; } /* text-blue-600 */
+        .role-skeleton { color: #dc2626; } /* text-red-600 */
+        .card-text-treasure { color: #ca8a04; font-weight: 700; }
+        .card-text-kraken { color: #9333ea; font-weight: 700; }
+        .card-text-empty { color: #6b7280; }
+
+        /* ⭐️ 5-3: 게임 결과 화면 */
+        #game-result-screen { display: none; }
+        #result-player-list li.SKELETON {
+            color: #dc2626; /* Tailwind 'text-red-600' */
+            font-weight: 700; /* Tailwind 'font-bold' */
+        }
+
+        /* body { display: flex; font-family: sans-serif; }
+        .sidebar { width: 300px; border-right: 1px solid #ccc; padding: 10px; height: 100vh; display: flex; flex-direction: column; }
+        .main-game { flex-grow: 1; padding: 20px; }
+
+        #participant-list { padding-left: 10px; }
+        #participant-list li { list-style: none; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        #participant-list .ready { color: green; font-weight: bold; }
+        #participant-list .not-ready { color: gray; }
+
+        .kick-btn { background-color: #ffcccc; border: 1px solid red; color: red; cursor: pointer; font-size: 10px; padding: 2px 4px; border-radius: 3px; }
+
+        #chat-window { height: 300px; border: 1px solid #ddd; overflow-y: scroll; padding: 5px; margin-bottom: 5px; background: #f9f9f9; }
+        #chat-window li { list-style: none; margin-bottom: 5px; }
+        #chat-form { display: flex; }
+        #chat-input { flex-grow: 1; }
+
+
+        #host-controls { background-color: #f0f8ff; border: 1px solid #b0e0e6; padding: 10px; margin-top: 10px; }
+        #host-controls { display: none; }
+
+
+        #host-error { color: red; font-weight: bold; margin-top: 10px; }
+
+
+        #game-board { margin-top: 20px; }
+        .player-board { margin-bottom: 15px; border: 1px solid #ccc; padding: 10px; }
+        .player-board.my-turn { background-color: #ffffdd; border: 2px solid #e6e600; }
+        .cards { display: flex; gap: 5px; margin-top: 5px; }
+        .card { width: 60px; height: 90px; border: 1px solid #888; border-radius: 4px; background-color: #aaa; cursor: pointer; }
+        .card.my-card { background-color: #ddd; cursor: not-allowed; }
+        .card.revealed { background-color: #fff; border: 2px solid #1a1a1a; cursor: not-allowed; }
+
+        #game-result-screen {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            padding: 50px;
+            text-align: center;
+        }
+        #result-player-list li.SKELETON {
+            color: red;
+            font-weight: bold;
+        } */
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+<!-- ⭐️ [수정] 전체 레이아웃 (Flexbox) -->
+<div class="flex h-screen">
+    <!-- 1. 사이드바 (참여자, 채팅, 컨트롤) -->
+    <div class="sidebar w-[350px] bg-white border-r border-gray-200 p-4 flex flex-col shadow-lg">
+        <h3 class="text-xl font-semibold mb-2 text-gray-800">참여자 목록</h3>
+        <p class="text-sm text-gray-600 mb-3">인원: <span id="player-count">0 / 0</span></p>
+        <ul id="participant-list" class="space-y-2 mb-4">
+            <!-- JS로 채워짐 -->
+        </ul>
+
+        <hr class="my-4">
+
+        <h3 class="text-xl font-semibold mb-2 text-gray-800">채팅</h3>
+        <div id="chat-window" class="flex-grow border border-gray-200 rounded-md p-2 overflow-y-auto bg-gray-50 mb-3">
+            <ul id="chat-messages" class="space-y-2">
+                <!-- JS로 채워짐 -->
+            </ul>
+        </div>
+        <form id="chat-form" class="flex gap-2">
+            <input type="text" id="chat-input" placeholder="메시지 입력..." required
+                   class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <button type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700">전송</button>
+        </form>
+
+        <hr class="my-4">
+
+        <h3 class="text-xl font-semibold mb-3 text-gray-800">방 컨트롤</h3>
+        <button id="ready-btn" class="w-full py-2 px-4 bg-green-500 text-white rounded-md font-medium hover:bg-green-600">
+            준비
+        </button>
+
+        <form action="/room/leave" method="POST" class="mt-2">
+            <button type="submit" class="w-full py-2 px-4 bg-gray-500 text-white rounded-md font-medium hover:bg-gray-600">
+                로비로 나가기
+            </button>
+        </form>
+
+        <!-- ⭐️ 3-2: 방장 전용 컨트롤 -->
+        <div id="host-controls" class="hidden mt-4 bg-blue-50 border border-blue-200 p-4 rounded-md space-y-3">
+            <h4 class="text-lg font-semibold text-blue-800">방장 설정</h4>
+            <div>
+                <label for="max-players-select" class="block text-sm font-medium text-gray-700">최대 인원:</label>
+                <select id="max-players-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="4">4명</option>
+                    <option value="5">5명</option>
+                    <option value="6">6명</option>
+                </select>
+            </div>
+            <button id="start-game-btn" class="w-full py-2 px-4 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700">
+                게임 시작
+            </button>
+            <div id="host-error" class="text-red-600 text-sm font-medium"></div>
+        </div>
+    </div>
+
+    <!-- 2. 메인 게임 영역 -->
+    <div class="main-game flex-grow p-6 overflow-y-auto">
+        <h1 id="main-title" class="text-3xl font-bold text-gray-800">게임 대기실</h1>
+        <p class="text-gray-600 mt-1">
+            방 코드: <strong class="text-gray-900" th:text="${roomCode}">0000</strong>
+        </p>
+
+        <!-- ⭐️ 인게임 정보 (메인 영역으로 이동) -->
+        <div id="game-info" class="hidden bg-white p-4 rounded-lg shadow mt-4 space-y-2">
+            <div class="flex justify-between">
+                <div>
+                    <h4 class="font-semibold">게임 정보</h4>
+                    <p>라운드: <span id="game-round" class="font-medium">1</span> / 4</p>
+                    <p>찾은 보물: <span id="treasures-found" class="font-medium">0</span> / <span id="treasures-total" class="font-medium">0</span></p>
+                </div>
+                <div>
+                    <h4 class="font-semibold">나의 정보</h4>
+                    <p>역할: <span id="my-role" class="font-medium text-blue-600">?</span></p>
+                    <p>손패: <span id="my-hand" class="font-medium text-gray-700">?</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⭐️ 게임 보드 영역 -->
+        <div id="game-board-area" class="mt-6">
+            <p class="text-gray-500">모두 준비가 완료되면 방장이 게임을 시작합니다.</p>
+        </div>
+    </div>
+
+    <!-- ⭐️ 5-3: 게임 결과 화면 (전체 화면 오버레이) -->
+    <div id="game-result-screen" class="fixed inset-0 z-20 flex items-center justify-center bg-gray-900 bg-opacity-75">
+        <div class="bg-white p-10 rounded-lg shadow-2xl text-center w-full max-w-lg">
+            <h1 id="result-title" class="text-4xl font-bold text-gray-800 mb-4">게임 종료!</h1>
+            <h2 id="result-winner" class="text-3xl font-bold mb-6"></h2>
+
+            <div class="text-lg space-y-2 mb-6">
+                <p>찾은 보물: <span id="result-treasures" class="font-medium"></span></p>
+                <p>크라켄: <span id="result-kraken" class="font-medium"></span></p>
+            </div>
+
+            <h3 class="text-xl font-semibold mb-3">플레이어 역할</h3>
+            <ul id="result-player-list" class="space-y-1 mb-8">
+                <!-- JS로 채워짐 -->
+            </ul>
+            <p class="text-gray-500">10초 후 로비로 이동합니다...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ⭐️ SockJS/Stomp 라이브러리 추가 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<!-- ⭐️ 게임방 전용 스크립트 -->
+<script src="/js/game-room.js"></script>
+</body>
+</html>
