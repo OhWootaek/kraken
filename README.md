@@ -6,6 +6,57 @@
 
 이 프로젝트는 Java/Spring 백엔드 개발자가 갖춰야 할 핵심 역량인 **실시간 데이터 처리, 인증/인가, 객체 지향 설계(도메인 모델링), 트랜잭션 관리, 클라우드 배포** 경험을 종합적으로 학습하기 위해 진행되었습니다.
 
+# 실행 방법
+
+### 1. 배포 주소로 접속
+1. http://ec2-43-202-55-108.ap-northeast-2.compute.amazonaws.com 해당 주소로 접속하여 배포된 웹 보드게임 플레이이
+
+### 2. 로컬 환경 (H2 DB)
+
+1. 리포지토리를 Clone 받습니다.
+    ```
+    git clone [https://github.com/](https://github.com/)[Your-Username]/[Your-Repo-Name].git
+    cd [Your-Repo-Name]
+    ```
+
+2. ```application-local.properties``` 파일을 생성합니다. (H2 기본 설정으로 충분)
+
+3. ```application.properties```의 ```spring.profiles.active```가 ```local```인지 확인합니다.
+
+4. 프로젝트를 실행합니다.
+    ```
+    ./gradlew bootRun
+    ```
+
+5. ```http://localhost:8080```에 접속하여 게스트 로그인을 사용합니다.
+
+### 3. 프로덕션(배포) 환경 (AWS EC2 + RDS)
+
+1. AWS RDS (MySQL) 인스턴스를 생성하고 테이블을 생성합니다.
+
+2. ```application-prod.properties``` 파일에 RDS 엔드포인트와 DB 접속 정보를 입력합니다.
+
+3. AWS EC2 (Ubuntu) 인스턴스에 ```git```, ```nginx```, ```java 17```을 설치합니다.
+
+4. EC2 서버에서 리포지토리를 ```clone``` 받고 ```Deploy Key```를 등록합니다.
+```
+cd kraken
+./gradlew clean bootJar # .jar 파일 빌드
+```
+
+5. ```prod``` 프로필을 활성화하여 ```.jar``` 파일을 백그라운드로 실행합니다.
+```
+nohup java -jar -Dspring.profiles.active=prod build/libs/kraken-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
+```
+
+6. ```nginx``` 설정을 수정하여 80 포트 요청을 8080 포트로 리버스 프록시합니다. (WebSocket 헤더 포함)
+```
+sudo vi /etc/nginx/sites-available/default
+# (location / { ... } 수정)
+sudo systemctl restart nginx
+```
+7. EC2 IP 또는 연결된 도메인(```http://[Your-Domain]```)으로 접속합니다.
+
 # 주요 기능 (Screenshots)
 ## 로비 (Lobby)
 ![img.png](img.png)
@@ -242,54 +293,6 @@
         - 1:1 (Private): /user/topic/room/.../game-state (나의 역할/손패), /user/topic/room/errors (방장 에러). ```SimpMessagingTemplate.convertAndSendToUser```를 사용.
 
     - ```WebSocketSecurityConfig```: WebSocket은 HTTP와 세션을 공유하지 않는 문제를 해결하기 위해, ```AbstractSecurityWebSocketMessageBrokerConfigurer```와 ```spring-security-messaging``` 의존성을 도입했습니다. 이를 통해 STOMP의 ```CONNECT``` 메시지 시점에 HTTP 세션의 ```Authentication``` 객체를 WebSocket 세션으로 안전하게 전파하도록 설계했습니다.
-
-# 실행 방법
-
-### 1. 로컬 환경 (H2 DB)
-
-1. 리포지토리를 Clone 받습니다.
-    ```
-    git clone [https://github.com/](https://github.com/)[Your-Username]/[Your-Repo-Name].git
-    cd [Your-Repo-Name]
-    ```
-
-2. ```application-local.properties``` 파일을 생성합니다. (H2 기본 설정으로 충분)
-
-3. ```application.properties```의 ```spring.profiles.active```가 ```local```인지 확인합니다.
-
-4. 프로젝트를 실행합니다.
-    ```
-    ./gradlew bootRun
-    ```
-
-5. ```http://localhost:8080```에 접속하여 게스트 로그인을 사용합니다.
-
-### 2. 프로덕션(배포) 환경 (AWS EC2 + RDS)
-
-1. AWS RDS (MySQL) 인스턴스를 생성하고 테이블을 생성합니다.
-
-2. ```application-prod.properties``` 파일에 RDS 엔드포인트와 DB 접속 정보를 입력합니다.
-
-3. AWS EC2 (Ubuntu) 인스턴스에 ```git```, ```nginx```, ```java 17```을 설치합니다.
-
-4. EC2 서버에서 리포지토리를 ```clone``` 받고 ```Deploy Key```를 등록합니다.
-```
-cd kraken
-./gradlew clean bootJar # .jar 파일 빌드
-```
-
-5. ```prod``` 프로필을 활성화하여 ```.jar``` 파일을 백그라운드로 실행합니다.
-```
-nohup java -jar -Dspring.profiles.active=prod build/libs/kraken-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
-```
-
-6. ```nginx``` 설정을 수정하여 80 포트 요청을 8080 포트로 리버스 프록시합니다. (WebSocket 헤더 포함)
-```
-sudo vi /etc/nginx/sites-available/default
-# (location / { ... } 수정)
-sudo systemctl restart nginx
-```
-7. EC2 IP 또는 연결된 도메인(```http://[Your-Domain]```)으로 접속합니다.
 
 # 트러블 슈팅 및 주요 학습 내용
 
