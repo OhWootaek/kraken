@@ -61,7 +61,6 @@ public class User {
         this.username = newUsername;
     }
 
-    // ⭐️ [유지] 연관관계 헬퍼 메서드 (양방향 관리를 위해)
     public void setParticipant(RoomParticipant participant) {
         this.participant = participant;
         if (participant != null) {

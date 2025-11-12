@@ -15,16 +15,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List; // ⭐️ 추가
 
-@Controller // ⭐️ 1. @RestController에서 변경
-// @RequestMapping("/api/rooms") // ⭐️ 2. 클래스 레벨 RequestMapping 삭제
+@Controller
 @RequiredArgsConstructor
 public class GameRoomController {
 
-    private final GameRoomService gameRoomService; // ⭐️ gameRoomService 주입
+    private final GameRoomService gameRoomService;
     private final UserRepository userRepository;
 
     /**
-     * ⭐️ 3. 로비 API (경로 수정 및 @ResponseBody 추가)
+     * 로비 API (경로 수정 및 @ResponseBody 추가)
      */
     @GetMapping("/api/rooms")
     @ResponseBody // ⭐️ JSON을 반환하도록 추가
@@ -33,7 +32,7 @@ public class GameRoomController {
     }
 
     /**
-     * ⭐️ 4. 방 검색 API (경로 수정 및 @ResponseBody 추가)
+     * 방 검색 API (경로 수정 및 @ResponseBody 추가)
      */
     @GetMapping("/api/rooms/search")
     @ResponseBody // ⭐️ JSON을 반환하도록 추가
@@ -44,7 +43,7 @@ public class GameRoomController {
 
 
     /**
-     * ⭐️ 5. 방 생성 처리 (경로 수정 없음, /room/create 그대로 사용)
+     * 방 생성 처리 (경로 수정 없음, /room/create 그대로 사용)
      */
     @PostMapping("/room/create")
     public String createRoom(
@@ -71,7 +70,7 @@ public class GameRoomController {
     }
 
     /**
-     * ⭐️ 신규: 게임방 입장 처리
+     * 게임방 입장 처리
      */
     @PostMapping("/room/join")
     public String joinRoom(
@@ -100,7 +99,7 @@ public class GameRoomController {
     }
 
     /**
-     * ⭐️ 신규: 방 나가기
+     * 방 나가기
      */
     @PostMapping("/room/leave")
     public String leaveRoom(@AuthenticationPrincipal OAuth2User oAuth2User) {
@@ -114,7 +113,7 @@ public class GameRoomController {
     }
 
     /**
-     * ⭐️ 6. 게임방 페이지 (경로 수정 없음, /room/{roomCode} 그대로 사용)
+     * 게임방 페이지
      * (예: /room/1234)
      */
     @GetMapping("/room/{roomCode}")
@@ -123,13 +122,12 @@ public class GameRoomController {
             Model model,
             @AuthenticationPrincipal OAuth2User oAuth2User) {
 
-        // TODO: (다음 단계) 이 방에 현재 유저가 참여했는지, 방이 존재하는지 등 검증 로직 필요
         String email = oAuth2User.getAttribute("email");
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid user"));
 
         model.addAttribute("roomCode", roomCode);
-        model.addAttribute("currentUserId", user.getId()); // ⭐️ JS에서 본인 식별용
+        model.addAttribute("currentUserId", user.getId());
         model.addAttribute("currentUsername", user.getUsername());
         return "game-room";
     }

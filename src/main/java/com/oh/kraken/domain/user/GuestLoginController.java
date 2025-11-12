@@ -36,7 +36,7 @@ public class GuestLoginController {
         // 1. 닉네임으로 유저를 찾거나 생성
         User user = guestLoginService.loginOrRegister(username);
 
-        // 2. ⭐️ [핵심] 수동으로 OAuth2User Principal 생성
+        // 2. 수동으로 OAuth2User Principal 생성
         // (기존 컨트롤러들이 @AuthenticationPrincipal OAuth2User를 사용하기 때문)
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("email", user.getEmail());
@@ -49,19 +49,19 @@ public class GuestLoginController {
 
         OAuth2User principal = new DefaultOAuth2User(authorities, attributes, "email");
 
-        // 3. ⭐️ 수동으로 Authentication 객체 생성
+        // 3. 수동으로 Authentication 객체 생성
         Authentication authentication = new OAuth2AuthenticationToken(
                 principal,
                 authorities,
                 "guest" // "google" 대신 "guest"
         );
 
-        // 4. ⭐️ SecurityContext에 수동으로 인증 정보 주입
+        // 4. SecurityContext에 수동으로 인증 정보 주입
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        // 5. ⭐️ 세션에 인증 정보 저장 (중요)
+        // 5. 세션에 인증 정보 저장 (중요)
         HttpSessionSecurityContextRepository repo = new HttpSessionSecurityContextRepository();
         repo.saveContext(context, request, response);
 

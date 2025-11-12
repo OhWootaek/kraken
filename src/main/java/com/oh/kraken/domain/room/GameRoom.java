@@ -44,7 +44,7 @@ public class GameRoom {
     @JoinColumn(name = "host_user_id", nullable = false)
     private User host; // 방장
 
-    // ⭐️ [유지] 1:N 연관관계. GameRoom이 Participant의 생명주기를 관리!
+    // 1:N 연관관계. GameRoom이 Participant의 생명주기를 관리!
     @OneToMany(mappedBy = "gameRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomParticipant> participants = new ArrayList<>();
 
@@ -67,19 +67,17 @@ public class GameRoom {
         return this.password == null || this.password.isEmpty();
     }
 
-    // ⭐️ [유지] 연관관계 헬퍼 메서드
     public void addParticipant(RoomParticipant participant) {
         this.participants.add(participant);
         participant.setGameRoom(this);
     }
 
-    // ⭐️ [유지] 연관관계 헬퍼 메서드
     public void removeParticipant(RoomParticipant participant) {
         this.participants.remove(participant);
         participant.setGameRoom(null);
     }
 
-    // ⭐️ [추가] 3-2: 방장이 최대 인원 변경
+    // 3-2: 방장이 최대 인원 변경
     public void changeMaxPlayers(int newMaxPlayers) {
         if (newMaxPlayers < 4 || newMaxPlayers > 6) {
             throw new IllegalArgumentException("최대 인원은 4명에서 6명 사이여야 합니다.");
@@ -90,7 +88,7 @@ public class GameRoom {
         this.maxPlayers = newMaxPlayers;
     }
 
-    // ⭐️ [추가] 3-2: 게임 시작 (상태 변경)
+    // 3-2: 게임 시작 (상태 변경)
     public void startGame() {
         if (this.status != GameStatus.WAITING) {
             throw new IllegalStateException("대기 중인 방만 시작할 수 있습니다.");
@@ -100,7 +98,7 @@ public class GameRoom {
     }
 
     /**
-     * ⭐️ [신규] 4-2: 게임 종료 (상태 변경)
+     * 게임 종료 (상태 변경)
      */
     public void finishGame() {
         if (this.status != GameStatus.PLAYING) {

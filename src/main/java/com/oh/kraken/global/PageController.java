@@ -13,7 +13,6 @@ public class PageController {
 
     @GetMapping("/")
     public String home() {
-        // ⭐️ [FIX] 인증 상태를 확인
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         // 1. 로그인 안 한 유저 (Anonymous)

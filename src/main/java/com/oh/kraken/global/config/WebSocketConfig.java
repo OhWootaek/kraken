@@ -1,4 +1,4 @@
-package com.oh.kraken.global.config; // ⭐️ 패키지 경로는 실제 프로젝트에 맞게 확인
+package com.oh.kraken.global.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -7,7 +7,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 @Configuration
-@EnableWebSocketMessageBroker // ⭐️ STOMP/WebSocket 메시지 브로커를 활성화하는 핵심 어노테이션
+@EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override

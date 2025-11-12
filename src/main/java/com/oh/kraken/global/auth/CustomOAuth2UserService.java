@@ -37,7 +37,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> saveNewUser(email, provider));
 
-        // ⭐️ Fix: attributes 맵 복사 후, DB의 username 추가
+        // attributes 맵 복사 후, DB의 username 추가
         Map<String, Object> customAttributes = new HashMap<>(attributes);
         customAttributes.put("username", user.getUsername()); // GUEST는 null이 들어감 (정상)
 

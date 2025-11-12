@@ -32,10 +32,10 @@ public class GuestLoginService {
         User newUser = User.builder()
                 .email(fakeEmail)
                 .provider("guest") // provider를 "guest"로 설정
-                .role(Role.ROLE_GUEST) // ⭐️ 중요: GUEST로 생성
+                .role(Role.ROLE_GUEST) // GUEST로 생성
                 .build();
 
-        // ⭐️ updateUsernameAndRole을 호출하여 ROLE_USER로 즉시 승격
+        // updateUsernameAndRole을 호출하여 ROLE_USER로 즉시 승격
         newUser.updateUsernameAndRole(username);
 
         return userRepository.save(newUser);

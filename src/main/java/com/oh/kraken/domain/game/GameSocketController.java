@@ -21,13 +21,12 @@ import org.springframework.stereotype.Controller;
 public class GameSocketController {
 
     private final GameService gameService;
-    private final GameRoomService gameRoomService; // ⭐️ [추가] 3-2
-    private final UserRepository userRepository; // ⭐️ Principal -> User 엔티티 변환용
-    private final SimpMessagingTemplate messagingTemplate; // ⭐️ 1:1 에러 전송용
+    private final GameRoomService gameRoomService;
+    private final UserRepository userRepository;
 
     /**
-     * (1) 유저가 방에 처음 구독할 때, 현재 방 상태를 1회 전송
-     * (Topic: /topic/room/{roomCode}/state)
+     * 유저가 방에 처음 구독할 때, 현재 방 상태를 1회 전송
+     * Topic: /topic/room/{roomCode}/state
      */
     @SubscribeMapping("/room/{roomCode}/state")
     public RoomStateResponse handleSubscription(
@@ -38,8 +37,8 @@ public class GameSocketController {
     }
 
     /**
-     * (2) 유저가 "준비" 버튼을 눌렀을 때
-     * (Destination: /app/room/{roomCode}/ready)
+     * 유저가 "준비" 버튼을 눌렀을 때
+     * Destination: /app/room/{roomCode}/ready
      */
     @MessageMapping("/room/{roomCode}/ready")
     public void handleReady(
@@ -51,8 +50,8 @@ public class GameSocketController {
     }
 
     /**
-     * (3) 유저가 채팅 메시지를 보냈을 때
-     * (Destination: /app/room/{roomCode}/chat)
+     * 유저가 채팅 메시지를 보냈을 때
+     * Destination: /app/room/{roomCode}/chat
      */
     @MessageMapping("/room/{roomCode}/chat")
     public void handleChat(
@@ -61,11 +60,11 @@ public class GameSocketController {
             @AuthenticationPrincipal OAuth2User oAuth2User) {
 
         User user = findUserByPrincipal(oAuth2User);
-        message.setSenderUsername(user.getUsername()); // ⭐️ 서버에서 보낸 사람 닉네임 설정
+        message.setSenderUsername(user.getUsername());
         gameService.handleChatMessage(message, roomCode);
     }
 
-    // ⭐️ [추가] 3-2: 방장 - 강퇴
+    // 방장 - 강퇴
     @MessageMapping("/room/{roomCode}/kick")
     public void handleKickPlayer(
             @DestinationVariable String roomCode,
@@ -76,7 +75,7 @@ public class GameSocketController {
         gameRoomService.kickPlayer(roomCode, request.getUsername(), host);
     }
 
-    // ⭐️ [추가] 3-2: 방장 - 최대 인원 변경
+    // 방장 - 최대 인원 변경
     @MessageMapping("/room/{roomCode}/config/max-players")
     public void handleChangeMaxPlayers(
             @DestinationVariable String roomCode,
@@ -87,7 +86,7 @@ public class GameSocketController {
         gameRoomService.changeMaxPlayers(roomCode, request.getMaxPlayers(), host);
     }
 
-    // ⭐️ [추가] 3-2: 방장 - 게임 시작
+    // 방장 - 게임 시작
     @MessageMapping("/room/{roomCode}/start")
     public void handleStartGame(
             @DestinationVariable String roomCode,
@@ -98,7 +97,7 @@ public class GameSocketController {
     }
 
     /**
-     * ⭐️ [신규] 4-2: 카드 선택
+     * 카드 선택
      */
     @MessageMapping("/room/{roomCode}/select-card")
     public void handleSelectCard(
@@ -111,7 +110,7 @@ public class GameSocketController {
     }
 
     /**
-     * ⭐️ [추가] 3-2: 방장 권한 에러 처리기
+     * 방장 권한 에러 처리기
      * (게임 시작 실패, 강퇴 실패 등)
      * 에러 발생 시, 요청한 방장에게만 1:1로 에러 메시지를 전송
      */
@@ -123,7 +122,7 @@ public class GameSocketController {
         return new GameErrorMessage(ex.getMessage());
     }
 
-    // ⭐️ Principal(OAuth2User)로부터 User 엔티티를 조회하는 헬퍼 메서드
+    // Principal(OAuth2User)로부터 User 엔티티를 조회하는 헬퍼 메서드
     private User findUserByPrincipal(OAuth2User oAuth2User) {
         String email = oAuth2User.getAttribute("email");
         return userRepository.findByEmail(email)

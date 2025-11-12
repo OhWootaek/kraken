@@ -46,12 +46,10 @@ public class RoomParticipant {
         this.isReady = !this.isReady;
     }
 
-    // ⭐️ [유지] 연관관계 헬퍼 메서드
     public void setGameRoom(GameRoom gameRoom) {
         this.gameRoom = gameRoom;
     }
 
-    // ⭐️ [유지] 연관관계 헬퍼 메서드
     public void setUser(User user) {
         this.user = user;
     }

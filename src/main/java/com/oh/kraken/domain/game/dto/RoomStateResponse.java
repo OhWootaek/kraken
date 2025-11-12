@@ -24,7 +24,7 @@ public class RoomStateResponse {
                 .map(ParticipantDto::new)
                 .collect(Collectors.toList());
         this.currentPlayers = this.participants.size();
-        this.hostId = room.getHost().getId(); // ⭐️ [FIX]
+        this.hostId = room.getHost().getId();
         this.status = room.getStatus();
     }
 }

@@ -16,12 +16,12 @@ public class MyGamePlayerDto extends InGamePlayerDto {
     private List<CardType> myHand; // 나의 손패 (1라운드: 5장)
 
     /**
-     * ⭐️ [FIX] 부모 생성자에 'requestingUserId' 전달
+     * 부모 생성자에 'requestingUserId' 전달
      * @param player PlayerState 객체
      * @param requestingUserId 이 DTO를 요청한 유저의 ID (즉, "나")
      */
     public MyGamePlayerDto(PlayerState player, Long requestingUserId) {
-        super(player, requestingUserId); // ⭐️ 부모 생성자 호출
+        super(player, requestingUserId); // 부모 생성자 호출
         this.myRole = player.getRole();
         this.myHand = player.getHand();
     }

@@ -12,6 +12,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 2. username 등록 시 중복 확인
     boolean existsByUsername(String username);
 
-    // ⭐️ [추가] 게스트 로그인 시 username으로 유저 조회
+    // 게스트 로그인 시 username으로 유저 조회
     Optional<User> findByUsername(String username);
 }

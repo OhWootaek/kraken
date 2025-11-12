@@ -24,20 +24,20 @@ public class GameState {
     @Setter
     private int treasuresTotal;
 
-    @Setter // ⭐️ [추가] 4-2: 라운드별 카드 카운터
+    @Setter // 4-2: 라운드별 카드 카운터
     private int roundRevealedCount;
 
-    @Setter // ⭐️ [추가] 5-5: 라운드 종료 딜레이 플래그
+    @Setter // 5-5: 라운드 종료 딜레이 플래그
     private boolean awaitingNextRound = false;
 
     public GameState(String roomCode) {
         this.roomCode = roomCode;
         this.currentRound = 1;
         this.treasuresFound = 0;
-        this.roundRevealedCount = 0; // ⭐️ [추가]
+        this.roundRevealedCount = 0;
     }
 
-    // ⭐️ [추가] 4-2: 모든 플레이어의 PlayerState 목록 반환
+    // 4-2: 모든 플레이어의 PlayerState 목록 반환
     public List<PlayerState> getAllPlayerStates() {
         return new ArrayList<>(players.values());
     }

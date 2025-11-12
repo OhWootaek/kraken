@@ -21,7 +21,7 @@ public class WebSocketSecurityConfig extends AbstractSecurityWebSocketMessageBro
                 .simpTypeMatchers(SimpMessageType.MESSAGE).authenticated() // /app/** (발행)
                 .simpTypeMatchers(SimpMessageType.SUBSCRIBE).authenticated() // /topic/** (구독)
 
-                // (2) ⭐️ [핵심] 구독(SUBSCRIBE) 경로별 세부 설정
+                // (2) 구독(SUBSCRIBE) 경로별 세부 설정
                 // /app/** 경로는 1회성 데이터 요청이므로 구독 허용
                 .simpSubscribeDestMatchers("/app/**").authenticated()
                 // /user/** 경로는 1:1 메시지이므로 구독 허용
@@ -29,7 +29,7 @@ public class WebSocketSecurityConfig extends AbstractSecurityWebSocketMessageBro
                 // /topic/** 경로는 공용 방송이므로 구독 허용
                 .simpSubscribeDestMatchers("/topic/**").authenticated()
 
-                // (3) ⭐️ [핵심] 메시지 발행(MESSAGE) 경로별 세부 설정
+                // (3) 메시지 발행(MESSAGE) 경로별 세부 설정
                 .simpDestMatchers("/app/**").authenticated()
 
                 // (4) 그 외 모든 메시지는 일단 거부
@@ -37,7 +37,6 @@ public class WebSocketSecurityConfig extends AbstractSecurityWebSocketMessageBro
     }
 
     /**
-     * ⭐️ [핵심]
      * CSRF 토큰 검사를 비활성화합니다.
      * (활성화하려면 클라이언트 STOMP 헤더에 CSRF 토큰을 추가해야 하므로 복잡해짐)
      */

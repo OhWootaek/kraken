@@ -32,10 +32,10 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
         String targetUrl;
         if (user.getRole() == Role.ROLE_GUEST) {
-            // ⭐️ 최초 로그인이면 닉네임 등록 페이지로
+            // 최초 로그인이면 닉네임 등록 페이지로
             targetUrl = "/register-username";
         } else {
-            // ⭐️ 이미 등록된 유저면 로비로
+            // 이미 등록된 유저면 로비로
             targetUrl = "/lobby";
         }
 

@@ -26,10 +26,10 @@ public class GameRoomService {
     private final PasswordEncoder passwordEncoder; // 비밀번호 암호화
     private final GameService gameService;
     private final GameNotificationService gameNotificationService;
-    private final EntityManager em; // ⭐️ [FIX] 강제 Flush용 EntityManager
+    private final EntityManager em;
 
     /**
-     * (신규) 유저가 현재 방에 참여 중인지 확인하고, 있다면 강제 퇴장
+     * 유저가 현재 방에 참여 중인지 확인하고, 있다면 강제 퇴장
      */
     @Transactional
     public void cleanupParticipantIfExists(Long userId) {
@@ -37,16 +37,15 @@ public class GameRoomService {
             GameRoom room = participant.getGameRoom();
             User user = participant.getUser();
 
-            // 헬퍼 메서드로 연관관계 제거
+            // 연관관계 제거
             room.removeParticipant(participant);
             if (user != null) {
                 user.setParticipant(null);
             }
 
-            // ⭐️ [FIX] 강제 Flush
             em.flush();
 
-            // 만약 방장이었다면... (방장 위임 로직 - 3-2에서 구현)
+            // 만약 방장이었다면...
             if (room.getHost().getId().equals(userId)) {
                 // TODO: 방장 위임 로직
             }
@@ -59,12 +58,6 @@ public class GameRoomService {
 
     // 1. 로비 목록 조회 
     public List<RoomLobbyResponse> getWaitingRooms() {
-        // (대기중인 방)만
-        // List<GameRoom> waitingRooms = gameRoomRepository.findByStatus(GameStatus.WAITING);
-        
-        /*return waitingRooms.stream()
-                .map(this::mapToLobbyResponse)
-                .collect(Collectors.toList());*/
 
         // 대기중인 방과 방장 정보를 한 번에 조회
         List<GameRoom> waitingRooms = gameRoomRepository.findAllWaitingWithHost();
@@ -93,7 +86,7 @@ public class GameRoomService {
     }
 
     /**
-     * ⭐️ 신규: 게임방 입장
+     * 게임방 입장
      */
     @Transactional
     public void joinRoom(String roomCode, String password, User user) {
@@ -130,30 +123,21 @@ public class GameRoomService {
                 .isReady(false)
                 .build();
 
-        // ⭐️ [해결] TransientObjectException 방지를 위해 participant를 먼저 저장(영속화)
-        // 6. [FIX] Participant를 먼저 DB에 저장 (영속화)
+        // 6. Participant를 먼저 DB에 저장 (영속화)
         roomParticipantRepository.saveAndFlush(newParticipant);
-        //roomParticipantRepository.save(newParticipant);
-        
-        // ⭐️ [유지] 헬퍼 메서드 사용 (이제 충돌 안 남)
+
         room.addParticipant(newParticipant);
         user.setParticipant(newParticipant);
 
-        // ⭐️ [유지] room만 저장하면 participant도 Cascade로 저장됨
-        // gameRoomRepository.save(room);
-
-        // roomParticipantRepository.save(newParticipant);
-
-        // 6. 로비 갱신 알림
+        // 7. 로비 갱신 알림
         lobbyNotificationService.notifyLobbyUpdate();
 
-        // 7. (다음 단계) 방 내부에도 "OO님이 입장했습니다" 알림 전송
+        // 8. 방 내부에도  알림 전송
         gameService.broadcastCurrentState(roomCode);
-        // messagingTemplate.convertAndSend("/topic/room/" + roomCode, ...);
     }
 
     /**
-     * 신규: 게임방 나가기
+     * 게임방 나가기
      */
     @Transactional
     public void leaveRoom(User user) {
@@ -163,22 +147,19 @@ public class GameRoomService {
 
         GameRoom room = participant.getGameRoom();
 
-        // ⭐️ [유지] 헬퍼 메서드로 관계 끊기
+        // 헬퍼 메서드로 관계 끊기
         room.removeParticipant(participant);
         user.setParticipant(null);
 
-        // ⭐️ [추가] 4-1: 메모리에서 게임 상태 제거
+        // 메모리에서 게임 상태 제거
         if (room.getStatus() != GameStatus.PLAYING) {
             gameService.removeGame(room.getRoomCode());
         }
 
-        // ⭐️ 즉시 반영
         gameRoomRepository.flush();
 
-        // ⭐️ [FIX] 변경 사항 즉시 Flush
         em.flush();
 
-        // ⭐️ [유지] room만 저장하면 participant는 orphanRemoval=true에 의해 자동 삭제됨
         gameRoomRepository.save(room);
 
         int remainingPlayers = roomParticipantRepository.countByGameRoom_Id(room.getId());
@@ -196,7 +177,7 @@ public class GameRoomService {
     }
 
     /**
-     * ⭐️ 신규: 게임방 생성
+     *  게임방 생성
      */
     @Transactional
     public GameRoom createRoom(RoomCreateRequest request, User host) {
@@ -227,17 +208,10 @@ public class GameRoomService {
                 .isReady(true)
                 .build();
 
-        // ⭐️ [유지] 헬퍼 메서드 사용 (이제 충돌 안 남)
         gameRoom.addParticipant(hostParticipant);
         host.setParticipant(hostParticipant);
 
-        // 6. ⭐️ [FIX] GameRoom 저장 (CascadeType.ALL) + 즉시 Flush
         gameRoomRepository.saveAndFlush(gameRoom);
-
-        // ⭐️ [유지] gameRoom만 저장하면 CascadeType.ALL에 의해 participant도 저장됨
-        // gameRoomRepository.save(gameRoom);
-
-        // roomParticipantRepository.save(hostParticipant);
 
         // 5. 로비에 "방 목록 갱신" 알림 전송
         lobbyNotificationService.notifyLobbyUpdate();
@@ -246,7 +220,7 @@ public class GameRoomService {
     }
 
     /**
-     * ⭐️ 신규: 4자리 고유 숫자 코드 생성기 (1000 ~ 9999)
+     * 4자리 고유 숫자 코드 생성기 (1000 ~ 9999)
      */
     private String generateUniqueRoomCode() {
         Random random = new Random();
@@ -259,7 +233,7 @@ public class GameRoomService {
         return roomCode;
     }
 
-    // ⭐️ [추가] 3-2: 플레이어 강퇴
+    // 플레이어 강퇴
     @Transactional
     public void kickPlayer(String roomCode, String usernameToKick, User host) {
         GameRoom room = gameRoomRepository.findByRoomCode(roomCode)
@@ -284,26 +258,19 @@ public class GameRoomService {
             throw new IllegalStateException("준비 완료 상태인 유저는 강퇴할 수 없습니다.");
         }
 
-        // ⭐️ [FIX 2] DB 삭제 *전*에 강퇴 알림 1:1 전송
         String kickedUserEmail = participantToKick.getUser().getEmail();
         gameNotificationService.sendKickNotification(kickedUserEmail, "방장에 의해 강퇴당했습니다.");
 
         // 5. 강퇴 (연관관계 제거)
         room.removeParticipant(participantToKick);
         participantToKick.getUser().setParticipant(null);
-        // orphanRemoval=true에 의해 participantToKick는 DB에서 자동 삭제됨
 
-        // ⭐️ [추가] 4-1: 메모리에서 게임 상태 제거 (게임 시작 후 강퇴 대비)
-        // (방장이 나간게 아니라면 굳이 제거할 필요는 없지만, 안전을 위해)
-        // ⭐️ [FIX] 4-2: 강퇴 시에도 "게임 중"일 때는 메모리에서 제거하면 안 됨.
         if (room.getStatus() != GameStatus.PLAYING) {
             gameService.removeGame(room.getRoomCode());
         }
 
-        // ⭐️ 즉시 반영
         gameRoomRepository.flush();
 
-        // ⭐️ [FIX] 변경 사항 즉시 Flush
         em.flush();
 
         gameRoomRepository.save(room);
@@ -312,11 +279,9 @@ public class GameRoomService {
         lobbyNotificationService.notifyLobbyUpdate(); // 로비 인원 갱신
         gameService.broadcastCurrentState(roomCode); // 방 내부 인원 갱신
 
-        // TODO: (다음 단계) 강퇴당한 유저에게 1:1로 "당신은 강퇴되었습니다" 알림을 보내고
-        // 클라이언트에서 그 알림을 받으면 /lobby로 튕겨나가게 처리
     }
 
-    // ⭐️ [추가] 3-2: 최대 인원 변경
+    // 최대 인원 변경
     @Transactional
     public void changeMaxPlayers(String roomCode, int newMaxPlayers, User host) {
         GameRoom room = gameRoomRepository.findByRoomCode(roomCode)
@@ -329,9 +294,7 @@ public class GameRoomService {
 
         // 2. 엔티티 내부에서 로직 처리
         room.changeMaxPlayers(newMaxPlayers);
-        // @Transactional에 의해 변경 감지(Dirty Checking)되어 DB에 저장됨
 
-        // ⭐️ [FIX] 변경 사항 즉시 Flush
         gameRoomRepository.saveAndFlush(room);
 
         // 3. 알림

@@ -8,7 +8,7 @@ import java.util.UUID;
  */
 @Getter
 public class PlayerCard {
-    private final String cardId; // ⭐️ DOM에서 식별하기 위한 고유 ID
+    private final String cardId;
     private final CardType type;
     private boolean isRevealed;
 
@@ -18,7 +18,7 @@ public class PlayerCard {
         this.isRevealed = false; // 기본은 뒷면
     }
 
-    // ⭐️ [FIX] 카드를 "제거"하는 대신 "뒤집음"
+    // 카드를 "뒤집음"
     public void reveal() {
         this.isRevealed = true;
     }

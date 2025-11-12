@@ -22,10 +22,9 @@ public class InGameRoomStateDto {
     private int treasuresTotal;
     private List<CardType> revealedCardsPile; // 중앙에 공개된 카드 목록
     private List<InGamePlayerDto> players;
-    private boolean awaitingNextRound; // ⭐️ [추가] 5-5
+    private boolean awaitingNextRound;
 
     /**
-     * ⭐️ [FIX] 생성자에 'requestingUserId' 추가
      * @param room DB GameRoom
      * @param game Memory GameState
      * @param playerStates 모든 플레이어 상태
@@ -41,7 +40,7 @@ public class InGameRoomStateDto {
         this.revealedCardsPile = game.getRevealedCards();
         this.awaitingNextRound = game.isAwaitingNextRound();
 
-        // ⭐️ [FIX] InGamePlayerDto 생성자에 requestingUserId 전달
+        // InGamePlayerDto 생성자에 requestingUserId 전달
         this.players = playerStates.stream()
                 .map(player -> new InGamePlayerDto(player, requestingUserId))
                 .collect(Collectors.toList());

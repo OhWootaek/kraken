@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
                 // 1. CSRF 설정 (기존 disable 유지 또는 h2-console만 예외 처리)
                 .csrf(csrf -> csrf
-                        // .ignoringRequestMatchers("/h2-console/**", "/login/guest") 게스트 로그인 활성화
+                        // .ignoringRequestMatchers("/h2-console/**", "/login/guest") // 게스트 로그인 활성화
                         .ignoringRequestMatchers("/h2-console/**")
                         .disable() // (또는 개발 중엔 전체 비활성화 유지)
                 )
@@ -61,10 +61,10 @@ public class SecurityConfig {
                         .successHandler(customOAuth2SuccessHandler) // 로그인 성공 후 핸들러
                 ) // 잠시 주석 처리
 
-                // ⭐️ [추가] 2. 임시 폼 로그인 설정
+                // 2. 임시 폼 로그인 설정
                 /*.formLogin(form -> form
-                        .loginPage("/guest-login")    // ⭐️ 커스텀 로그인 페이지
-                        //.loginProcessingUrl("/login/guest") // ⭐️ 이 URL로 폼을 전송 (우리가 직접 처리)
+                        .loginPage("/guest-login")    // 커스텀 로그인 페이지
+                        //.loginProcessingUrl("/login/guest") // 이 URL로 폼을 전송 (우리가 직접 처리)
                         .permitAll()
                 )*/
 

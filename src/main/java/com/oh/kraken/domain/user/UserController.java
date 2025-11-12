@@ -47,7 +47,7 @@ public class UserController {
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
         model.addAttribute("user", user);
-        return "mypage"; // 뷰 이름
+        return "mypage";
     }
 
     // 3. 닉네임 변경 처리

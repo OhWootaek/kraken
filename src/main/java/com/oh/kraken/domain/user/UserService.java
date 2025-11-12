@@ -41,20 +41,19 @@ public class UserService {
         // Principal 객체는 그대로 사용
         OAuth2User oAuth2User = (OAuth2User) currentAuth.getPrincipal();
 
-        // ⭐️ Fix: 새 username을 포함한 attributes 맵 생성
         Map<String, Object> newAttributes = new HashMap<>(oAuth2User.getAttributes());
-        newAttributes.put("username", username); // ⭐️ 새로 등록한 닉네임 추가;
+        newAttributes.put("username", username); // 새로 등록한 닉네임 추가;
 
-        // ⭐️ Fix: 새 attributes와 새 권한으로 Principal 객체 새로 생성
+        // 새 attributes와 새 권한으로 Principal 객체 새로 생성
         DefaultOAuth2User newOAuth2User = new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(Role.ROLE_USER.name())), // 새 권한
-                newAttributes, // ⭐️ 새 속성 맵
+                Collections.singleton(new SimpleGrantedAuthority(Role.ROLE_USER.name())),
+                newAttributes,
                 "email"
         );
 
-        // ⭐️ Fix: 새 Principal로 인증 토큰(Authentication)을 새로 만듦
+        // 새 Principal로 인증 토큰(Authentication)을 새로 만듦
         Authentication newAuth = new OAuth2AuthenticationToken(
-                newOAuth2User, // ⭐️ 새로 만든 Principal
+                newOAuth2User,
                 newOAuth2User.getAuthorities(),
                 ((OAuth2AuthenticationToken) currentAuth).getAuthorizedClientRegistrationId()
         );
