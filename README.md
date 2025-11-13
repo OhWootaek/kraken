@@ -9,7 +9,7 @@
 # 실행 방법
 
 ### 1. 배포 주소로 접속
-1. http://ec2-43-202-55-108.ap-northeast-2.compute.amazonaws.com 해당 주소로 접속하여 배포된 웹 보드게임 플레이이
+1. [http://ec2-43-202-55-108.ap-northeast-2.compute.amazonaws.com](http://ec2-43-201-251-115.ap-northeast-2.compute.amazonaws.com/) 해당 주소로 접속하여 배포된 웹 보드게임 플레이이
 
 ### 2. 로컬 환경 (H2 DB)
 
