@@ -47,7 +47,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6' // Thymeleaf에서 Spring Security 태그 사용
 
-	// ⭐️ [이 줄 추가!] WebSocket 보안을 위한 라이브러리
+	// WebSocket 보안을 위한 라이브러리
 	implementation 'org.springframework.security:spring-security-messaging'
 
 	// 테스트 도구

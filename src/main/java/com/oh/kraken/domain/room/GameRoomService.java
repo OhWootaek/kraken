@@ -47,7 +47,7 @@ public class GameRoomService {
 
             // 만약 방장이었다면...
             if (room.getHost().getId().equals(userId)) {
-                // TODO: 방장 위임 로직
+                promoteNextHostOrDeleteRoom(room);
             }
 
             // 갱신 알림
@@ -90,6 +90,7 @@ public class GameRoomService {
      */
     @Transactional
     public void joinRoom(String roomCode, String password, User user) {
+        cleanupParticipantIfExists(user.getId());
 
         // 1. 유저가 이미 다른 방에 있는지 확인 (DB Unique 제약 위반 방지)
         if (roomParticipantRepository.existsByUserId(user.getId())) {
@@ -136,6 +137,20 @@ public class GameRoomService {
         gameService.broadcastCurrentState(roomCode);
     }
 
+    private void promoteNextHostOrDeleteRoom(GameRoom room) {
+        // 방장이 나갔지만 사람 남음 -> 위임
+        // 쿼리 메서드 사용 (가장 먼저 들어온 사람)
+        RoomParticipant nextHostParticipant = roomParticipantRepository
+                .findFirstByGameRoom_IdAndUser_IdNotOrderByJoinedAtAsc(room.getId(), room.getHost().getId())
+                .orElse(room.getParticipants().get(0));
+
+        User newHost = nextHostParticipant.getUser();
+        room.setHost(newHost); // 2. GameRoom의 host 변경
+
+        // 3. 새 방장은 항상 Ready
+        nextHostParticipant.setReady(true);
+    }
+
     /**
      * 게임방 나가기
      */
@@ -168,7 +183,7 @@ public class GameRoomService {
             gameRoomRepository.delete(room);
         } else {
             if (room.getHost().getId().equals(user.getId())) {
-                // TODO: 방장 위임 로직
+                promoteNextHostOrDeleteRoom(room);
             }
             gameService.broadcastCurrentState(room.getRoomCode());
         }
@@ -181,6 +196,7 @@ public class GameRoomService {
      */
     @Transactional
     public GameRoom createRoom(RoomCreateRequest request, User host) {
+        cleanupParticipantIfExists(host.getId());
 
         // 1. 4자리 고유 코드 생성
         String roomCode = generateUniqueRoomCode();

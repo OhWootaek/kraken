@@ -291,16 +291,16 @@ public class GameService {
             game.setAwaitingNextRound(true);
             broadcastInGameState(roomCode);
 
+            // 라운드 종료 후 승리 조건 확인 (스켈레톤 승리 2)
+            if (game.getCurrentRound() >= 4) { // 4라운드까지 진행 완료
+                handleGameEnd(game, PlayerRole.SKELETON); // 보물 다 못 찾으면 스켈레톤 승리
+                return;
+            }
+
             // 3초 후 다음 라운드 진행
             taskScheduler.schedule(() -> {
                 handleNextRound(game, nextPlayerId);
             }, Instant.now().plusSeconds(3));
-
-            // 라운드 종료 후 승리 조건 확인 (스켈레톤 승리 2)
-            if (game.getCurrentRound() > 4) { // 4라운드까지 진행 완료
-                handleGameEnd(game, PlayerRole.SKELETON); // 보물 다 못 찾으면 스켈레톤 승리
-                return;
-            }
         } else {
             // 6. 다음 턴 플레이어 설정 (공개된 카드의 주인이 다음 턴)
             game.setCurrentTurnPlayerId(nextPlayerId);
@@ -315,7 +315,7 @@ public class GameService {
      * 4-2: 다음 라운드 준비
      */
     @Transactional
-    private void handleNextRound(GameState game, Long lastCardOwnerId) {
+    public void handleNextRound(GameState game, Long lastCardOwnerId) {
         log.info("[Game {}] Round {} ended. Preparing for next round.", game.getRoomCode(), game.getCurrentRound());
 
         game.setAwaitingNextRound(false);
@@ -402,7 +402,6 @@ public class GameService {
 
             MyGamePlayerDto myPrivateStateDto = new MyGamePlayerDto(player, requestingUserId);
 
-
             // 1:1 메시지 페이로드
             Map<String, Object> payload = Map.of(
                     "commonState", commonStateDto,
@@ -415,6 +414,48 @@ public class GameService {
                     payload
             );
         }
+    }
+
+    /**
+     * 재접속 유저에게 1:1 게임 상태 전송
+     */
+    public void broadcastInGameStateToUser(String roomCode, User user) {
+        GameState game = activeGames.get(roomCode);
+        GameRoom room = gameRoomRepository.findByRoomCode(roomCode).orElse(null);
+
+        if (game == null || room == null || room.getStatus() != GameStatus.PLAYING) {
+            log.warn("Reconnect failed: Game state not found or game not playing. Room: {}", roomCode);
+            // (이 경우 유저는 로비로 튕겨나가야 함 - PageController가 처리)
+            return;
+        }
+
+        PlayerState player = game.getPlayers().get(user.getId());
+        if (player == null) {
+            log.warn("Reconnect failed: User {} is not part of the game state. Room: {}", user.getUsername(), roomCode);
+            return;
+        }
+
+        List<PlayerState> allPlayerStates = game.getAllPlayerStates();
+
+        // 1:1 전송 (위의 broadcastInGameState 로직과 동일)
+        Long requestingUserId = user.getId();
+        String userEmail = user.getEmail();
+
+        InGameRoomStateDto commonStateDto = new InGameRoomStateDto(room, game, allPlayerStates, requestingUserId);
+        MyGamePlayerDto myPrivateStateDto = new MyGamePlayerDto(player, requestingUserId);
+
+        // 1:1 메시지 페이로드
+        Map<String, Object> payload = Map.of(
+                "commonState", commonStateDto,
+                "myState", myPrivateStateDto
+        );
+
+        gameNotificationService.notifyUser(
+                userEmail,
+                "/topic/room/" + roomCode + "/game-state",
+                payload
+        );
+        log.info("Sent reconnected game state to user {}", user.getUsername());
     }
 
     // [신규] 방 나가기/종료 시 메모리에서 게임 상태 제거

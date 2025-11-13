@@ -22,4 +22,6 @@ public interface RoomParticipantRepository extends JpaRepository<RoomParticipant
 
     // 강퇴 시 닉네임으로 참여자 조회
     Optional<RoomParticipant> findByGameRoom_IdAndUser_Username(Long roomId, String username);
+
+    Optional<RoomParticipant> findFirstByGameRoom_IdAndUser_IdNotOrderByJoinedAtAsc(Long roomId, Long hostId);
 }

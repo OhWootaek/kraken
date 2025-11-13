@@ -18,21 +18,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // "게임방 생성" 버튼 클릭 시 모달 열기
     if (createBtn) {
         createBtn.onclick = () => {
-            modal.classList.remove('hidden'); // ⭐️ 'display: block' 대신 'hidden' 클래스 제거
+            modal.classList.remove('hidden');
         };
     }
 
     // "X" 버튼 클릭 시 모달 닫기
     if (closeBtn) {
         closeBtn.onclick = () => {
-            modal.classList.add('hidden'); // ⭐️ 'display: none' 대신 'hidden' 클래스 추가
+            modal.classList.add('hidden');
         };
     }
 
     // 모달 바깥 클릭 시 닫기
     window.onclick = (event) => {
         if (event.target === modal) {
-            modal.classList.add('hidden'); // ⭐️ 'display: none' 대신 'hidden' 클래스 추가
+            modal.classList.add('hidden');
         }
     };
 });
@@ -105,10 +105,10 @@ function renderRoomList(rooms) {
         return;
     }
 
-    // ⭐️ Tailwind 클래스가 적용된 <td> 셀을 생성하는 헬퍼 함수
+    // Tailwind 클래스가 적용된 <td> 셀을 생성하는 헬퍼 함수
     const createCell = (text, classes = '') => {
         const td = document.createElement('td');
-        // ⭐️ 공통 셀 스타일
+        // 공통 셀 스타일
         td.className = `px-4 py-4 whitespace-nowrap text-sm text-gray-700 ${classes}`;
         td.textContent = text;
         return td;
@@ -116,7 +116,7 @@ function renderRoomList(rooms) {
 
     rooms.forEach(room => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50'; // ⭐️ 마우스 호버 효과
+        tr.className = 'hover:bg-gray-50';
 
         // 방 제목 (가중치)
         tr.appendChild(createCell(room.title, 'font-medium text-gray-900'));
@@ -136,17 +136,17 @@ function renderRoomList(rooms) {
         const joinBtn = document.createElement('button');
         joinBtn.onclick = () => joinRoom(room.roomCode, room.public);
 
-        // ⭐️ Tailwind 기본 버튼 스타일
+        // Tailwind 기본 버튼 스타일
         joinBtn.className = 'px-3 py-1 text-xs font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2';
 
         if (room.currentPlayers >= room.maxPlayers || room.status !== 'WAITING') {
             joinBtn.disabled = true;
             joinBtn.textContent = room.status === 'PLAYING' ? '게임중' : '꽉참';
-            // ⭐️ Tailwind 비활성화 버튼 스타일
+            // Tailwind 비활성화 버튼 스타일
             joinBtn.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
         } else {
             joinBtn.textContent = '입장';
-            // ⭐️ Tailwind 활성화 버튼 스타일
+            // Tailwind 활성화 버튼 스타일
             joinBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'focus:ring-blue-500');
         }
 
@@ -157,7 +157,7 @@ function renderRoomList(rooms) {
     });
 
     /**
-     * ⭐️ 신규: 방 입장 처리 (비밀번호 묻기)
+     * 방 입장 처리 (비밀번호 묻기)
      */
     function joinRoom(roomCode, isPublic) {
         let password = null;
@@ -169,12 +169,12 @@ function renderRoomList(rooms) {
             }
         }
 
-        // ⭐️ POST 요청을 보내기 위한 동적 폼 생성
+        // POST 요청을 보내기 위한 동적 폼 생성
         postJoinRequest(roomCode, password);
     }
 
     /**
-     * ⭐️ 신규: 동적 폼을 생성하여 POST + Redirect 처리
+     * 동적 폼을 생성하여 POST + Redirect 처리
      */
     function postJoinRequest(roomCode, password) {
         const form = document.createElement('form');

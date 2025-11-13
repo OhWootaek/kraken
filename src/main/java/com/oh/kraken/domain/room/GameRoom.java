@@ -62,6 +62,13 @@ public class GameRoom {
         this.status = GameStatus.WAITING; // 생성 시 기본 상태는 '대기중'
     }
 
+    public void setHost(User newHost) {
+        if (newHost == null) {
+            throw new IllegalArgumentException("새로운 방장은 null일 수 없습니다.");
+        }
+        this.host = newHost;
+    }
+
     //== 편의 메서드 ==//
     public boolean isPublic() {
         return this.password == null || this.password.isEmpty();

@@ -110,6 +110,18 @@ public class GameSocketController {
     }
 
     /**
+     * 재접속 유저가 인게임 정보 요청
+     */
+    @MessageMapping("/room/{roomCode}/request-game-state")
+    public void handleGameStateRequest(
+            @DestinationVariable String roomCode,
+            @AuthenticationPrincipal OAuth2User oAuth2User) {
+
+        User user = findUserByPrincipal(oAuth2User);
+        gameService.broadcastInGameStateToUser(roomCode, user);
+    }
+
+    /**
      * 방장 권한 에러 처리기
      * (게임 시작 실패, 강퇴 실패 등)
      * 에러 발생 시, 요청한 방장에게만 1:1로 에러 메시지를 전송

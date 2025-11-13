@@ -1,19 +1,19 @@
 package com.oh.kraken.domain.room;
 
 import com.oh.kraken.domain.room.dto.RoomCreateRequest;
-import com.oh.kraken.domain.room.dto.RoomLobbyResponse; // ⭐️ 추가
+import com.oh.kraken.domain.room.dto.RoomLobbyResponse;
 import com.oh.kraken.domain.user.User;
 import com.oh.kraken.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity; // ⭐️ 추가
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Controller; // ⭐️ @RestController -> @Controller
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*; // ⭐️ 추가
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List; // ⭐️ 추가
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class GameRoomController {
      * 로비 API (경로 수정 및 @ResponseBody 추가)
      */
     @GetMapping("/api/rooms")
-    @ResponseBody // ⭐️ JSON을 반환하도록 추가
+    @ResponseBody
     public ResponseEntity<List<RoomLobbyResponse>> getLobbyList() {
         return ResponseEntity.ok(gameRoomService.getWaitingRooms());
     }
@@ -35,7 +35,7 @@ public class GameRoomController {
      * 방 검색 API (경로 수정 및 @ResponseBody 추가)
      */
     @GetMapping("/api/rooms/search")
-    @ResponseBody // ⭐️ JSON을 반환하도록 추가
+    @ResponseBody
     public ResponseEntity<RoomLobbyResponse> getRoomByCode(@RequestParam String code) {
         RoomLobbyResponse room = gameRoomService.findRoomByCode(code);
         return ResponseEntity.ok(room);
@@ -61,7 +61,7 @@ public class GameRoomController {
             GameRoom newRoom = gameRoomService.createRoom(request, host);
 
             // 3. 생성 성공 시 해당 방으로 즉시 리다이렉트
-            return "redirect:/room/" + newRoom.getRoomCode(); // ⭐️ /room/1234
+            return "redirect:/room/" + newRoom.getRoomCode();
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "방 생성에 실패했습니다: " + e.getMessage());

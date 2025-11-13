@@ -23,7 +23,6 @@ public class RoomParticipant {
     @JoinColumn(name = "room_id", nullable = false)
     private GameRoom gameRoom;
 
-    // ⭐️ user_id UNIQUE 제약조건을 위해 OneToOne 사용
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
@@ -52,5 +51,9 @@ public class RoomParticipant {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setReady(boolean ready) {
+        this.isReady = ready;
     }
 }
