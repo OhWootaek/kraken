@@ -30,8 +30,8 @@ public class SecurityConfig {
         http
                 // 1. CSRF 설정 (기존 disable 유지 또는 h2-console만 예외 처리)
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/h2-console/**", "/login/guest") // 게스트 로그인 활성화
-                        //.ignoringRequestMatchers("/h2-console/**")
+                        //.ignoringRequestMatchers("/h2-console/**", "/login/guest") // 게스트 로그인 활성화
+                        .ignoringRequestMatchers("/h2-console/**")
                         .disable() // (또는 개발 중엔 전체 비활성화 유지)
                 )
                 // 2. H2 콘솔 사용을 위한 Frame 옵션 해제 (필수!)
@@ -42,8 +42,8 @@ public class SecurityConfig {
                 // 3. 인가(권한) 설정
                 .authorizeHttpRequests(authz -> authz
                         // 모두 허용 (로그인 페이지, 루트, CSS/JS 등)
-                        //.requestMatchers("/", "/login", "/register-username", "/css/**", "/js/**", "/h2-console/**").permitAll() // 구글로그인
-                        .requestMatchers("/", "/guest-login", "/login/guest", "/css/**", "/js/**", "/h2-console/**").permitAll() // 게스트 로그인
+                        .requestMatchers("/", "/login", "/register-username", "/css/**", "/js/**", "/h2-console/**").permitAll() // 구글로그인
+                        //.requestMatchers("/", "/guest-login", "/login/guest", "/css/**", "/js/**", "/h2-console/**").permitAll() // 게스트 로그인
                         // "GUEST" 권한만 접근 가능
                         .requestMatchers("/register-username").hasRole("GUEST")
                         // "USER" 권한만 접근 가능 (로비, 게임방 등)
@@ -53,20 +53,20 @@ public class SecurityConfig {
                 )
 
                 // 4. OAuth2 로그인 설정
-                /*.oauth2Login(oauth2 -> oauth2
+                .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login") // 커스텀 로그인 페이지
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService) // 유저 로드 서비스
                         )
                         .successHandler(customOAuth2SuccessHandler) // 로그인 성공 후 핸들러
-                )*/ // 잠시 주석 처리
+                ) // 잠시 주석 처리
 
                 // 2. 임시 폼 로그인 설정
-                .formLogin(form -> form
+                /*.formLogin(form -> form
                         .loginPage("/guest-login")    // 커스텀 로그인 페이지
                         //.loginProcessingUrl("/login/guest") // 이 URL로 폼을 전송 (우리가 직접 처리)
                         .permitAll()
-                )
+                )*/
 
                 // 5. 로그아웃 설정
                 .logout(logout -> logout

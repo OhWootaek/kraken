@@ -31,7 +31,7 @@ public class PageController {
     private final UserRepository userRepository;
     private final RoomParticipantRepository roomParticipantRepository;
 
-    /*@GetMapping("/")
+    @GetMapping("/")
     public String home() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -55,22 +55,22 @@ public class PageController {
             return redirectUrl.get(); // 게임방으로 리다이렉트
         }
         return "redirect:/lobby";
-    }*/
-    @GetMapping("/")
+    }
+    /*@GetMapping("/")
     public String home() {
         return "index"; // index.html
-    }
+    }*/
 
     @GetMapping("/login")
     public String login() {
-        return "guest-login"; // guest-login.html
-        //return "login"; // login.html
+        //return "guest-login"; // guest-login.html
+        return "login"; // login.html
     }
 
-    @GetMapping("/guest-login")
+    /*@GetMapping("/guest-login")
     public String guestLoginPage() {
         return "guest-login"; // guest-login.html
-    } // 임시 추가
+    }*/ // 임시 추가
 
     @GetMapping("/register-username")
     public String registerUsernameForm() {
