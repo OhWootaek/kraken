@@ -1,0 +1,16 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    { "collectionGroup": "rooms", "fieldPath": "chat", "indexes": [] },
+    { "collectionGroup": "rooms", "fieldPath": "game", "indexes": [] },
+    { "collectionGroup": "rooms", "fieldPath": "members", "indexes": [] },
+    { "collectionGroup": "rooms", "fieldPath": "result", "indexes": [] },
+    { "collectionGroup": "secrets", "fieldPath": "game", "indexes": [] },
+    {
+      "collectionGroup": "secrets",
+      "fieldPath": "passwordHash",
+      "indexes": []
+    },
+    { "collectionGroup": "players", "fieldPath": "hand", "indexes": [] }
+  ]
+}

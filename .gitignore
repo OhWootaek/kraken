@@ -39,3 +39,16 @@ out/
 application.properties
 application-prod.properties
 application-local.properties
+# TypeScript application
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.firebase/
+.vercel/
+*-debug.log
+playwright-report/
+test-results/
+
+.DS_Store

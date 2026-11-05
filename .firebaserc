@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "board-game-kraken"
+  },
+  "targets": {
+    "board-game-kraken": {
+      "hosting": {
+        "dbg": ["dbg-kraken"]
+      }
+    }
+  },
+  "etags": {}
+}

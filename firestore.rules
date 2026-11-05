@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function inRoom(data) {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roomCode == data.code;
+    }
+    match /users/{uid} { allow read: if signedIn() && request.auth.uid == uid; }
+    match /rooms/{code} {
+      allow read: if signedIn() && (resource.data.status == 'WAITING' || inRoom(resource.data));
+      match /players/{uid} {
+        allow read: if signedIn() && request.auth.uid == uid
+          && inRoom(get(/databases/$(database)/documents/rooms/$(code)).data);
+      }
+    }
+    // All client writes and all reads of server secrets/nickname claims are denied.
+    // Admin SDK writes must pass authentication + authorization in the API.
+    match /{document=**} { allow read, write: if false; }
+  }
+}
