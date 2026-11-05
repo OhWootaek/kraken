@@ -111,3 +111,10 @@
 - 운영 Firestore 집계 조회: users 1개, names 1개, rooms 0개, secrets 0개. 최근 24시간 Monitoring 지표 합계 읽기 75회, 쓰기 15회. 조회 이후 요청 및 모니터링 집계 지연은 반영되지 않을 수 있다. 문서 내용이나 비밀키는 출력하지 않았다.
 - Vercel CLI billing usage는 Hobby의 비용 데이터를 반환하지 않았다. 이를 사용량/비용 0으로 해석하지 않았다. 브라우저 Usage의 Last 30 Days 화면에서 Function Invocations 30, CDN Requests 45, Fast Data Transfer 891.11kB, Fluid Active CPU 3s, Deployment Storage 1.27MB를 확인했다. 플랜은 Hobby이며 유료 기능·구독을 추가하지 않았다.
 - 재경기 기능은 운영의 여러 실제 Google 계정으로 플레이한 검증이 아니며, 운영 API와 정적 화면 배포는 아래 배포 기록을 따른다.
+
+### 재경기 배포 결과
+
+- 구현 커밋 `8548b0c`를 `codex/free-tier-rematch`로 푸시했고 원격 커밋 일치를 확인했다. 이 시점부터 이전 절의 미커밋/미푸시 상태는 해소됐다.
+- Vercel 운영 배포 `dpl_9tKpNJQYHdkWYY482jMxwN9ET4Li` READY. `rematch` 요청의 비로그인/잘못된 토큰 401, 외부 Origin 403, GET 405, 허용 Origin OPTIONS 204/CORS를 확인했다.
+- Firebase Hosting 파일 3개 배포 성공. 공개 JS `index-Cbn8GkSs.js`와 로컬 빌드 SHA-256 일치, `한번 더하기`/`재참가 신청 완료` 및 운영 API 주소 포함을 확인했다. 공개 HTTP 200.
+- 이 배포에서 게임 규칙·인증·보안 규칙을 완화하지 않았다. 새 신청 UID 배열은 최대 6개이며 이전 결과 정리 때 함께 제거한다.

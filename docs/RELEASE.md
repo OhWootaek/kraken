@@ -29,20 +29,20 @@
 
 ## 실제 출시를 위해 아직 필요한 것
 
-현재는 로컬 구현과 에뮬레이터 검증까지 마친 상태다. 사용자가 Firebase 프로젝트와 Vercel 계정 생성을 완료했다. Firebase 웹 앱·CLI 인증·무료 Hosting 사이트·DB 보안 규칙 설정까지 완료했다. Google 제공업체와 승인 도메인 설정도 완료했다. Vercel API와 Hosting 콘텐츠를 배포했다. 실제 Google 로그인·방 생성·동일 계정 두 탭의 채팅/설정 동기화·재접속 복원까지 검증했다. 서로 다른 4~6계정의 운영 전체 게임, 재인증·탈퇴와 소스 커밋·푸시는 남아 있다.
+현재는 로컬 구현과 에뮬레이터 검증까지 마친 상태다. 사용자가 Firebase 프로젝트와 Vercel 계정 생성을 완료했다. Firebase 웹 앱·CLI 인증·무료 Hosting 사이트·DB 보안 규칙 설정까지 완료했다. Google 제공업체와 승인 도메인 설정도 완료했다. Vercel API와 Hosting 콘텐츠를 배포했다. 실제 Google 로그인·방 생성·동일 계정 두 탭의 채팅/설정 동기화·재접속 복원까지 검증했다. 운영 닉네임 변경·복원과 로그아웃/사용자 재로그인을 확인했다. 사용자 결정에 따라 다인원·재인증/탈퇴는 에뮬레이터에서 검증했다. 구현은 `codex/free-tier-rematch` 브랜치에 커밋·푸시했고 재경기 API와 화면도 배포했다. 실제 Google 다계정 게임·탈퇴 검증과는 구분한다.
 
-| 준비 항목            | 필요한 내용                                                                                                    | 현재 상태                                     |
-| -------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Firebase 프로젝트    | Spark, Cloud Billing 미연결, 웹 앱 등록, Firestore Standard, Google 로그인, 일반 Hosting                       | DB/웹 앱/Google 설정 완료                     |
-| 무료 사이트 이름     | `프로젝트ID.web.app` 또는 Hosting 사이트 ID. 별도 유료 도메인은 필요 없음                                      | dbg-kraken.web.app 배포 완료                  |
-| Vercel 계정·프로젝트 | 개인 Hobby, 저장소 연결, 유료 체험/구독 미사용                                                                 | Hobby 확인, 운영 API 배포 완료                |
-| 새 코드 반영         | 현재 로컬 변경을 검토하고 GitHub에 커밋·푸시                                                                   | 아직 푸시하지 않음                            |
-| 서버 인증 정보       | Firebase 서비스 계정과 API의 Firestore/Auth 권한. 비밀키는 Vercel 환경 변수에만 입력                           | 전용 계정·권한·Production Secret 등록 완료    |
-| 공개 웹 설정         | Firebase 웹 구성 값, Vercel API 주소, 허용 Origin, Google 승인 도메인·지원 이메일·외부 사용자 로그인 상태 확인 | 웹 SDK·승인 도메인·API 연결·Hosting 배포 완료 |
-| 운영 통합 검증       | 실제 Google 로그인·재접속·닉네임 변경·탈퇴, 기기별 4/5/6인 채팅·게임, 카드 정보 접근 제어                      | 배포 후 필요                                  |
-| 무료 사용량 확인     | 실제 Firestore 읽기/쓰기·용량, Vercel 호출/CPU 한도 확인. 한도 소진 시 중단 수용                               | 배포 후 필요                                  |
-| 기존 데이터          | 기존 RDS 사용자를 이전하지 않고 새 계정·닉네임으로 시작                                                        | 새로 시작 — RDS 이전 없음                     |
-| 출시 전 경고 검토    | VERIFICATION.md의 전이 의존성 중간 등급 경고와 기존 게임 중 퇴장 제약 검토                                     | 남아 있음                                     |
+| 준비 항목            | 필요한 내용                                                                                                    | 현재 상태                                         |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Firebase 프로젝트    | Spark, Cloud Billing 미연결, 웹 앱 등록, Firestore Standard, Google 로그인, 일반 Hosting                       | DB/웹 앱/Google 설정 완료                         |
+| 무료 사이트 이름     | `프로젝트ID.web.app` 또는 Hosting 사이트 ID. 별도 유료 도메인은 필요 없음                                      | dbg-kraken.web.app 배포 완료                      |
+| Vercel 계정·프로젝트 | 개인 Hobby, 저장소 연결, 유료 체험/구독 미사용                                                                 | Hobby 확인, 운영 API 배포 완료                    |
+| 새 코드 반영         | 현재 로컬 변경을 검토하고 GitHub에 커밋·푸시                                                                   | codex/free-tier-rematch 푸시 완료                 |
+| 서버 인증 정보       | Firebase 서비스 계정과 API의 Firestore/Auth 권한. 비밀키는 Vercel 환경 변수에만 입력                           | 전용 계정·권한·Production Secret 등록 완료        |
+| 공개 웹 설정         | Firebase 웹 구성 값, Vercel API 주소, 허용 Origin, Google 승인 도메인·지원 이메일·외부 사용자 로그인 상태 확인 | 웹 SDK·승인 도메인·API 연결·Hosting 배포 완료     |
+| 운영 통합 검증       | 실제 Google 로그인·재접속·닉네임 변경·탈퇴, 기기별 4/5/6인 채팅·게임, 카드 정보 접근 제어                      | 로그인·닉네임·복원 확인, 다인원/탈퇴는 에뮬레이터 |
+| 무료 사용량 확인     | 실제 Firestore 읽기/쓰기·용량, Vercel 호출/CPU 한도 확인. 한도 소진 시 중단 수용                               | 실제 지표/Usage 조회 완료, 집계 시점 기준         |
+| 기존 데이터          | 기존 RDS 사용자를 이전하지 않고 새 계정·닉네임으로 시작                                                        | 새로 시작 — RDS 이전 없음                         |
+| 출시 전 경고 검토    | VERIFICATION.md의 전이 의존성 중간 등급 경고와 기존 게임 중 퇴장 제약 검토                                     | 남아 있음                                         |
 
 프로젝트 ID, 무료 사이트 이름, 데이터 이전 여부는 공유해도 되지만 서비스 계정 비밀키·비밀번호·로그인 토큰을 채팅이나 Git에 올리지 않는다. 기존 AWS 과금 리소스는 새 배포 확인 후 별도로 정리하며 자동 삭제하지 않는다.
 
@@ -169,3 +169,11 @@ npx firebase deploy --only hosting:dbg --project board-game-kraken
 사용자가 기존 RDS 사용자를 이전하지 않고 새로 시작하기로 확정했다. 사용자·방·게임 데이터를 가져오는 작업은 하지 않는다. 새 서비스의 모든 사용자는 Google 로그인 후 닉네임을 등록한다. 기존 AWS/RDS 삭제도 실행하지 않는다.
 
 새 기능 검증을 마치기 전에는 기존 Java 코드를 제거하지 않는다. Firebase Hosting은 이전 배포로 롤백할 수 있고, API는 Vercel의 이전 배포를 사용할 수 있다. 데이터 구조가 바뀌는 후속 릴리스는 별도 호환성 검토가 필요하다. 새 배포가 검증된 후 기존 AWS의 RDS/EC2/볼륨/스냅샷/주소 등 과금 리소스를 담당자가 확인·정리한다.
+
+## 재경기 운영 반영 (2026-11-05)
+
+- 구현 커밋: `8548b0c`, GitHub `codex/free-tier-rematch` 브랜치 원격 일치 확인. 기본 브랜치 병합이나 Git 자동 배포 연결은 하지 않았다.
+- API: `dpl_9tKpNJQYHdkWYY482jMxwN9ET4Li` READY, 고정 주소 `https://dbg-kraken.vercel.app/api/command`. 배포 후 CORS/인증/메서드 검사 5개 통과.
+- 화면: `firebase deploy --only hosting:dbg --project board-game-kraken` 성공. 공개 주소 `https://dbg-kraken.web.app`의 JS가 로컬 운영 빌드와 SHA-256 일치하고 새 버튼/신청 완료 문구를 포함하는지 확인했다.
+- Firestore 규칙/인덱스 변경은 필요하지 않았다. 유료 기능·Cloud Billing·Pro 업그레이드·새 키를 추가하지 않았다.
+- 결과 화면의 재경기 정책은 [REMATCH.md](REMATCH.md), 상세 검증/사용량 스냅샷은 [VERIFICATION.md](VERIFICATION.md)를 따른다. 기존 탭은 새로고침하면 최신 화면을 사용한다.
