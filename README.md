@@ -80,7 +80,7 @@ npm run check        # TypeScript 검사
 npm run build        # 타입 검사 + 운영용 정적 빌드
 
 # 로컬 개발 서버가 실행 중일 때:
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:browser
 KRAKEN_PLAYERS=5 npm run test:browser
 KRAKEN_PLAYERS=6 npm run test:browser
@@ -89,6 +89,7 @@ KRAKEN_REMATCH=1 KRAKEN_PLAYERS=6 npm run test:browser
 # Java 21 이상 필요. 실제 계정이 아닌 demo-kraken 에뮬레이터만 사용:
 npm run test:firebase
 npm run test:integration  # Auth + Firestore + 운영 HTTP의 4/5/6인·재인증·탈퇴
+npm run test:browser:firebase # 실제 React/Firebase 구독으로 Chromium·WebKit 검사
 ```
 
 검증 결과와 남은 출시 조건은 [검증 기록](docs/VERIFICATION.md)을 확인하세요.

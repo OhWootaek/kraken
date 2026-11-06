@@ -1,9 +1,17 @@
-import { chromium, expect } from "@playwright/test";
+import { chromium, webkit, expect, type Request } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 const count = Number(process.env.KRAKEN_PLAYERS ?? 4);
 if (![4, 5, 6].includes(count))
   throw new Error("KRAKEN_PLAYERS must be 4, 5, or 6");
-const browser = await chromium.launch({ headless: true });
+const firebaseTest = !!process.env.KRAKEN_TEST_URL;
+const engine = process.env.KRAKEN_BROWSER === "webkit" ? webkit : chromium;
+const browser = await engine.launch({ headless: true });
+const browserRun = Date.now();
+const testUrl = (i: number) =>
+  firebaseTest
+    ? `${process.env.KRAKEN_TEST_URL}?user=${engine.name()}-${browserRun}-${i}`
+    : "http://127.0.0.1:5173";
+const transportModes: string[] = [];
 const contexts = await Promise.all(
   Array.from({ length: count }, () =>
     browser.newContext({ viewport: { width: 1440, height: 1000 } }),
@@ -11,23 +19,62 @@ const contexts = await Promise.all(
 );
 const pages = await Promise.all(contexts.map((c) => c.newPage()));
 const errors: string[] = [];
-for (const page of pages)
-  page.on("pageerror", (error) => errors.push(error.message));
+const activeChannels = new Map(pages.map((page) => [page, new Set<string>()]));
+const reloadChannels = new Set<string>();
+let cancelledReloadChannels = 0;
+for (const page of pages) {
+  page.on("pageerror", (error) => {
+    // WebKit reports cancelled emulator XHRs as page errors during navigation.
+    // Match only a pre-reload channel from the page we intentionally reload.
+    const cancelled =
+      firebaseTest &&
+      engine.name() === "webkit" &&
+      page === pages[2] &&
+      error.message.includes(
+        `${process.env.FIRESTORE_EMULATOR_HOST}/google.firestore.v1.Firestore/Listen/channel?`,
+      ) &&
+      error.message.endsWith("due to access control checks.") &&
+      [...reloadChannels].find((sid) =>
+        error.message.includes(`SID=${encodeURIComponent(sid)}`),
+      );
+    if (cancelled) {
+      reloadChannels.delete(cancelled);
+      cancelledReloadChannels++;
+      return;
+    }
+    errors.push(`page ${pages.indexOf(page)}: ${error.message}`);
+  });
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.includes("/Listen/channel"))
+      activeChannels.get(page)!.add(request.url());
+    if (url.pathname.includes("/Listen/channel") && url.searchParams.has("CI"))
+      transportModes.push(url.searchParams.get("CI")!);
+  });
+  const completed = (request: Request) => {
+    activeChannels.get(page)!.delete(request.url());
+  };
+  page.on("requestfinished", completed);
+  page.on("requestfailed", completed);
+}
 const suffix = String(Date.now()).slice(-6);
 const names = Array.from({ length: count }, (_, i) => i).map(
   (i) => `항해자${count}_${suffix}_${i}`,
 );
 await mkdir("test-results", { recursive: true });
 try {
-  await pages[0].goto("http://127.0.0.1:5173");
-  await pages[0].screenshot({
-    path: "test-results/landing.png",
-    fullPage: true,
-  });
+  if (!firebaseTest) {
+    await pages[0].goto(testUrl(0));
+    await pages[0].screenshot({
+      path: "test-results/landing.png",
+      fullPage: true,
+    });
+  }
   await Promise.all(
     pages.map(async (page, i) => {
-      await page.goto("http://127.0.0.1:5173");
-      await page.getByRole("button", { name: "로컬 플레이 시작" }).click();
+      await page.goto(testUrl(i));
+      if (!firebaseTest)
+        await page.getByRole("button", { name: "로컬 플레이 시작" }).click();
       await page.getByLabel("닉네임", { exact: true }).fill(names[i]);
       await page.getByRole("button", { name: "로비 입장" }).click();
       await expect(
@@ -81,7 +128,14 @@ try {
   await Promise.all(
     pages.map((p) => expect(p.locator(".private-hand")).toBeVisible()),
   );
+  if (firebaseTest)
+    for (const page of pages)
+      await expect(page.locator(".private-hand")).not.toContainText("확인 중");
   await expect(pages[0].locator(".player-board")).toHaveCount(count);
+  for (const url of activeChannels.get(pages[2])!) {
+    const sid = new URL(url).searchParams.get("SID");
+    if (sid) reloadChannels.add(sid);
+  }
   await pages[2].reload();
   await expect(pages[2].locator(".player-board")).toHaveCount(count);
   await pages[0].screenshot({ path: "test-results/game.png", fullPage: true });
@@ -205,11 +259,23 @@ try {
       ),
     );
   }
+  if (firebaseTest && engine.name() === "webkit") {
+    expect(transportModes).toContain("1");
+    expect(transportModes).not.toContain("0");
+  }
+  if (firebaseTest)
+    for (const page of pages)
+      await expect(page.getByRole("alert")).toHaveCount(0);
   expect(errors).toEqual([]);
+  if (cancelledReloadChannels)
+    console.log(
+      `WebKit cancelled pre-reload emulator channels: ${cancelledReloadChannels}`,
+    );
   console.log(
-    `Browser check passed: ${count} users, room search/join, chat/XSS, readiness, game, reconnect, mobile, result, ${process.env.KRAKEN_REMATCH === "1" ? "rematch regrouping/host reassignment" : "automatic lobby return"}.`,
+    `Browser check passed: ${engine.name()}, ${firebaseTest ? "Firebase Auth/Firestore + production HTTP" : "local demo"}, ${count} users, room search/join, chat/XSS, readiness, game, reconnect, mobile, result, ${process.env.KRAKEN_REMATCH === "1" ? "rematch regrouping/host reassignment" : "automatic lobby return"}.`,
   );
 } catch (error) {
+  if (errors.length) console.error("Browser page errors:", errors);
   for (let i = 0; i < pages.length; i++)
     await pages[i]
       .screenshot({ path: `test-results/failure-${i}.png`, fullPage: true })

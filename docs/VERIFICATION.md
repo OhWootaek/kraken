@@ -118,3 +118,31 @@
 - Vercel 운영 배포 `dpl_9tKpNJQYHdkWYY482jMxwN9ET4Li` READY. `rematch` 요청의 비로그인/잘못된 토큰 401, 외부 Origin 403, GET 405, 허용 Origin OPTIONS 204/CORS를 확인했다.
 - Firebase Hosting 파일 3개 배포 성공. 공개 JS `index-Cbn8GkSs.js`와 로컬 빌드 SHA-256 일치, `한번 더하기`/`재참가 신청 완료` 및 운영 API 주소 포함을 확인했다. 공개 HTTP 200.
 - 이 배포에서 게임 규칙·인증·보안 규칙을 완화하지 않았다. 새 신청 UID 배열은 최대 6개이며 이전 결과 정리 때 함께 제거한다.
+
+## 모바일 실시간 갱신 수정 (2026-11-06)
+
+### 보고와 수정
+
+사용자는 iPhone Safari에서 방 입장·게임 시작·카드 선택 후 화면이 갱신되지 않고 새로고침하면 반영된다고 보고했다. Chrome에서도 같은지 여부는 확인되지 않았다. 기존 모바일 검사는 메모리/SSE 로컬 데모였으므로 Safari의 실제 Firestore 수신 경로를 검증하지 못했다.
+
+- `client/firestore-transport.ts`: iPhone/iPad(데스크톱 모드 포함)와 Safari는 `experimentalForceLongPolling: true`, `useFetchStreams: false`로 초기화한다. iPhone Chrome도 같은 iOS 분기에 포함한다. PC/Android Chrome·Firefox는 기존 기본 설정을 유지한다. [Firebase SDK의 Safari 수신 지연 보고](https://github.com/firebase/firebase-js-sdk/issues/9789), [공식 전송 설정 설명](https://firebase.google.com/docs/reference/js/firestore.firestoresettings)을 참고했다.
+- 설치된 Firestore 4.19.1이 `useFetchStreams`를 실제로 처리하는 것을 확인했다. 공개 타입에는 없어 교차 타입으로 지정했으며 `any`로 SDK 설정 검사를 제거하지 않았다. 의존성 변경은 하지 않았다.
+- Firestore/Auth 에뮬레이터와 실제 React 화면을 연결한 검사에서 결과/재경기 전환 때도 실패를 재현했다. 서버의 프로필은 이미 새 방/null이었지만 기존 오류 처리의 SDK `getDoc`은 이전 방의 캐시를 읽고 있었다. 전환 오류 때 인증된 기존 bootstrap API의 프로필을 적용하도록 변경했다. 동시 복구 요청을 합치며 주기적인 DB 조회는 추가하지 않았다.
+- 개인 손패는 PLAYING 동안에만 구독하고 결과/방 이탈 시 닫는다. 이전 방·손패 구독을 해제하고 새 프로필의 방/로비 구독으로 전환한다. 서버 규칙이나 카드 공개 범위를 완화하지 않았다.
+
+### 검사 환경과 범위
+
+`npm run test:browser:firebase`는 demo-kraken Auth/Firestore 에뮬레이터, 운영 productionHandler HTTP 코드, 실제 React 화면과 watchView를 함께 사용한다. 테스트 HTML/모의 Google 인증은 localhost + DEV + demo-kraken 조건에서만 실행하며 운영 빌드 진입점에 포함되지 않는다.
+
+- Chromium과 Playwright WebKit 27.2 각각 독립 사용자 4명의 가입·방 입장·채팅·준비·시작·역할/손패 표시·카드 공개/턴 변경·새로고침 복원·결과·재경기/방장 재배정을 검사한다. 모바일 뷰포트는 390×844다.
+- WebKit의 실제 Listen 요청이 long-polling(`CI=1`)인 것을 검사한다. 정상 흐름에 앱 오류 알림이 없는 것도 검사한다.
+- WebKit은 의도적으로 새로고침하는 페이지의 이전 에뮬레이터 XHR 취소를 pageerror로 보고했다. 새로고침 직전에 열려 있던 그 페이지의 특정 세션 ID와 일치하는 메시지만 별도로 기록한다. 다른 세션/페이지, 새로운 연결, 앱 오류는 계속 검사 실패로 취급한다.
+- 종료 시 진행 중인 HTTP 요청을 마친 다음 Firestore를 닫도록 테스트 정리 순서를 수정했다. 실패 진단을 위한 임시 프로필 로그는 운영 코드에서 제거했다.
+- 실제 사용자 iPhone의 Safari 버전/통신망에서 수정 후 성공한 것은 아직 확인하지 않았다. WebKit 검사 통과와 실제 단말 확인은 구분한다.
+
+### 최종 결과와 배포
+
+- `npm test`: **36개 통과**. `npm run check`, `npm run build`, `git diff --check` 통과. 기존 Firebase Auth 정적/동적 import 및 번들 크기 경고는 남아 있다.
+- `npm run test:browser:firebase`: Chromium 및 WebKit 각 4인 전체 시나리오 통과, **스크립트 종료 코드 0**. WebKit에서 새로고침 전 채널 취소 1건을 위 조건으로 구분 기록했다. 새 연결/앱 오류 알림은 없었다.
+- `firebase deploy --only hosting:dbg --project board-game-kraken` 성공. 공개 JS `/assets/index-BEUGf4tV.js`의 SHA-256이 로컬 운영 빌드와 일치했다. HTTP 200, 운영 Firebase 프로젝트 포함, 테스트용 키/인증 진입점의 번들 제외를 확인했다.
+- API·DB 규칙·요금제 변경은 필요하지 않았다. 실제 iPhone 사용자는 기존 탭을 새로고침해 새 전송 설정을 로드한 뒤 방 입장·게임 시작·카드 반영을 확인해야 한다.

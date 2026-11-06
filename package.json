@@ -12,7 +12,8 @@
     "cleanup": "node --import tsx scripts/cleanup.ts",
     "test:browser": "node --import tsx scripts/browser-check.ts",
     "test:firebase": "firebase emulators:exec --project demo-kraken --only firestore \"node --import tsx --test tests/firestore.integration.ts\"",
-    "test:integration": "firebase emulators:exec --project demo-kraken --only auth,firestore \"node --import tsx --test tests/auth-game.integration.ts\""
+    "test:integration": "firebase emulators:exec --project demo-kraken --only auth,firestore \"node --import tsx --test tests/auth-game.integration.ts\"",
+    "test:browser:firebase": "firebase emulators:exec --project demo-kraken --only auth,firestore \"node --import tsx scripts/firebase-browser-check.ts\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

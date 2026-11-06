@@ -8,8 +8,7 @@ import {
   type User,
 } from "firebase/auth";
 import {
-  getFirestore,
-  getDoc,
+  initializeFirestore,
   collection,
   doc,
   limit,
@@ -20,6 +19,7 @@ import {
 } from "firebase/firestore";
 import type { Command } from "../shared/commands";
 import type { Profile, Room, PrivatePlayer, View } from "../shared/types";
+import { firestoreBrowserSettings } from "./firestore-transport";
 export const isDemo =
   import.meta.env.DEV && import.meta.env.VITE_LOCAL_DEMO !== "false";
 const config = {
@@ -33,7 +33,7 @@ export const configured =
   (Object.values(config).every(Boolean) && !!import.meta.env.VITE_API_BASE_URL);
 const app = !isDemo && configured ? initializeApp(config) : null;
 const auth = app ? getAuth(app) : null;
-const db = app ? getFirestore(app) : null;
+const db = app ? initializeFirestore(app, firestoreBrowserSettings()) : null;
 export type Identity = { uid: string };
 let demo: Identity | null =
   isDemo && localStorage.getItem("kraken-demo-uid")
@@ -131,6 +131,8 @@ export function watchView(
   };
   let activeCode: string | null | undefined;
   let stops: Unsubscribe[] = [];
+  let stopPlayer: Unsubscribe | null = null;
+  let reconciling = false;
   let active = true;
   const emit = () => {
     if (active) callback({ ...state });
@@ -143,80 +145,105 @@ export function watchView(
       ),
     );
   const roomFailure = (code: string) => async () => {
-    if (!active || activeCode !== code) return;
-    // A kick/finish atomically removes access. Do not present that normal transition as an outage.
+    if (!active || activeCode !== code || reconciling) return;
+    reconciling = true;
     try {
-      const profile = await getDoc(doc(firestore, "users", uid));
-      if (!active || activeCode !== code || profile.data()?.roomCode !== code)
+      // Membership changes can revoke the old room before the profile listener catches up.
+      // Use the authenticated API's authoritative profile instead of the same stream's cache.
+      const { profile } = await command<{ profile: Profile | null }>({
+        type: "bootstrap",
+      });
+      if (!active || activeCode !== code) return;
+      if (profile?.roomCode !== code) {
+        updateProfile(profile);
         return;
+      }
     } catch {
       /* Report genuine permission/network failures below. */
+    } finally {
+      reconciling = false;
     }
     failure();
   };
+  const updateProfile = (profile: Profile | null) => {
+    state.profile = profile ?? {
+      username: null,
+      roomCode: null,
+      lastChatAt: 0,
+    };
+    const code = state.profile.roomCode;
+    if (activeCode !== code) {
+      activeCode = code;
+      stops.forEach((stop) => stop());
+      stopPlayer?.();
+      stopPlayer = null;
+      stops = [];
+      state.room = null;
+      state.privatePlayer = null;
+      state.lobby = [];
+      if (code) {
+        stops.push(
+          onSnapshot(
+            doc(firestore, "rooms", code),
+            (s) => {
+              if (activeCode !== code) return;
+              state.room = s.exists() ? (s.data() as Room) : null;
+              if (state.room?.status === "PLAYING") {
+                if (!stopPlayer)
+                  stopPlayer = onSnapshot(
+                    doc(firestore, "rooms", code, "players", uid),
+                    (hand) => {
+                      if (
+                        activeCode !== code ||
+                        state.room?.status !== "PLAYING"
+                      )
+                        return;
+                      state.privatePlayer = hand.exists()
+                        ? (hand.data() as PrivatePlayer)
+                        : null;
+                      emit();
+                    },
+                    roomFailure(code),
+                  );
+              } else {
+                stopPlayer?.();
+                stopPlayer = null;
+                state.privatePlayer = null;
+              }
+              emit();
+            },
+            roomFailure(code),
+          ),
+        );
+      } else {
+        stops.push(
+          onSnapshot(
+            query(
+              collection(firestore, "rooms"),
+              where("status", "==", "WAITING"),
+              limit(50),
+            ),
+            (s) => {
+              state.lobby = s.docs.map((d) => d.data() as Room);
+              emit();
+            },
+            failure,
+          ),
+        );
+      }
+    }
+    emit();
+  };
   const stopUser = onSnapshot(
     doc(firestore, "users", uid),
-    (snapshot) => {
-      state.profile = snapshot.exists()
-        ? (snapshot.data() as Profile)
-        : { username: null, roomCode: null, lastChatAt: 0 };
-      const code = state.profile.roomCode;
-      if (activeCode !== code) {
-        activeCode = code;
-        stops.forEach((stop) => stop());
-        stops = [];
-        state.room = null;
-        state.privatePlayer = null;
-        state.lobby = [];
-        if (code) {
-          stops.push(
-            onSnapshot(
-              doc(firestore, "rooms", code),
-              (s) => {
-                if (activeCode !== code) return;
-                state.room = s.exists() ? (s.data() as Room) : null;
-                emit();
-              },
-              roomFailure(code),
-            ),
-          );
-          stops.push(
-            onSnapshot(
-              doc(firestore, "rooms", code, "players", uid),
-              (s) => {
-                if (activeCode !== code) return;
-                state.privatePlayer = s.exists()
-                  ? (s.data() as PrivatePlayer)
-                  : null;
-                emit();
-              },
-              roomFailure(code),
-            ),
-          );
-        } else {
-          stops.push(
-            onSnapshot(
-              query(
-                collection(firestore, "rooms"),
-                where("status", "==", "WAITING"),
-                limit(50),
-              ),
-              (s) => {
-                state.lobby = s.docs.map((d) => d.data() as Room);
-                emit();
-              },
-              failure,
-            ),
-          );
-        }
-      }
-      emit();
-    },
+    (snapshot) =>
+      updateProfile(snapshot.exists() ? (snapshot.data() as Profile) : null),
     failure,
   );
   return () => {
     active = false;
     stopUser();
+    stopPlayer?.();
     stops.forEach((stop) => stop());
   };
 }

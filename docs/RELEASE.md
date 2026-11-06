@@ -177,3 +177,9 @@ npx firebase deploy --only hosting:dbg --project board-game-kraken
 - 화면: `firebase deploy --only hosting:dbg --project board-game-kraken` 성공. 공개 주소 `https://dbg-kraken.web.app`의 JS가 로컬 운영 빌드와 SHA-256 일치하고 새 버튼/신청 완료 문구를 포함하는지 확인했다.
 - Firestore 규칙/인덱스 변경은 필요하지 않았다. 유료 기능·Cloud Billing·Pro 업그레이드·새 키를 추가하지 않았다.
 - 결과 화면의 재경기 정책은 [REMATCH.md](REMATCH.md), 상세 검증/사용량 스냅샷은 [VERIFICATION.md](VERIFICATION.md)를 따른다. 기존 탭은 새로고침하면 최신 화면을 사용한다.
+
+## 모바일 실시간 갱신 수정 반영 (2026-11-06)
+
+Safari/iOS의 Firestore 전송 방식을 호환 설정으로 전환하고, 이전 방 접근 권한이 해제되는 시점에는 인증된 bootstrap API의 프로필로 현재 화면을 재조정한다. 손패 구독은 게임 진행 중에만 유지한다. 주기적인 DB 조회나 추가 유료 서비스를 도입하지 않았다.
+
+단위/API 36개 및 실제 React + Firestore/Auth 에뮬레이터의 Chromium/WebKit 브라우저 시나리오를 통과한 뒤 Hosting에 배포했다. 공개 자산은 `index-BEUGf4tV.js`이며 로컬 운영 빌드와 일치한다. 기존 탭은 새로고침해야 적용된다. 실제 iPhone 단말에서의 수정 후 성공 여부는 별도 사용자 확인이 필요하다. 자세한 재현·검증 범위는 VERIFICATION.md의 해당 날짜를 따른다.
